@@ -1,0 +1,18 @@
+# Vs code settings
+.vscode/
+
+# Build forlders
+/build/
+/cmake-build-*/
+
+#compiled objects
+*.o
+
+#compiled binaries
+*.exe
+*.out
+
+#cmake generated
+CMakeFiles/
+CMakeCache.txt
+Makefile
