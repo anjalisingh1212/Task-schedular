@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include "scheduler.hpp"
+#include "task.hpp"
 
 Scheduler::Scheduler(int size){
     maxSize = size;
@@ -40,8 +41,13 @@ bool Scheduler::dequeue(Task &t){
     if(front == rear){
         front = -1;
         rear = -1;
-        return;
+        return true;
     }
     front = (front+1)%maxSize;
     return true;
+}
+
+int main(){
+
+    return 0;
 }

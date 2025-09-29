@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <cstring>
+#include <limits>
 #include "taskMessage.hpp"
 #include "operation.hpp"
 
@@ -16,13 +17,20 @@ void showMenu(){
 }
 
 TaskMessage createTask(int choice){
-    TaskMessage msg;
+    TaskMessage msg = {};
     msg.operation = choice;
     if(choice == ADD || choice == SUBTRACT || choice == MULTIPLY || choice == SORT_NUMBERS){
         int size;
-        std::cout << "Enter number of operands: ";
+        while(1){
+        std::cout << "Enter number of operands(max 20 operands): ";
         std::cin >> size;
+
+            if(size > 20){
+                std::cout << "Entered number is more than allowed 20!" << std::endl;
+            }else break;
+        }
         std::vector<int> ops(size);
+        std::cout << "Enter the " << size << " operands: ";
         for(int i = 0; i < size; i++)
         {
             std::cin >> ops[i];
@@ -33,6 +41,7 @@ TaskMessage createTask(int choice){
     }else if(choice == REVERSE_STRING){
         std::string str;
         std::cout << "Enter a string: ";
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
         std::getline(std::cin, str); 
         size_t len = str.copy(msg.strOperand, 255);
         msg.strOperand[len] = '\0';
@@ -59,7 +68,12 @@ int main(){
         }
 
         TaskMessage msg = createTask(choice);
-        
+        std::cout << "msg struct created: " << std::endl;
+        std::cout << "operandtype " << msg.operandType << std::endl;
+        std::cout << "operation " << msg.operation << std::endl;
+        for(int i = 0; i < msg.operandCount; i++)
+            std::cout << "operands " << msg.operands[i] << std::endl;
+        std::cout << "str " << msg.strOperand << std::endl;
     }
 
     return 0;

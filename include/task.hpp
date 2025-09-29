@@ -13,6 +13,8 @@ private:
     std::string result;
 
 public:
+
+    Task()=default;
     Task(int Id, const std::string type);
     //setters
     void setOperands(const std::vector<int> &);
