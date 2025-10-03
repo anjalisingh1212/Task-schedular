@@ -7,15 +7,15 @@
 class Task{
 private:
     int taskId;
+    int taskType;
     std::vector<int> operands;
     std::string stringData;
-    std::string taskType;
     std::string result;
 
 public:
 
     Task()=default;
-    Task(int Id, const std::string type);
+    Task(const struct TaskMessage &msg, int id);
     //setters
     void setOperands(const std::vector<int> &);
     void setStringData(const std::string);
@@ -23,7 +23,7 @@ public:
 
     //getters
     int getTaskId() const;
-    std::string getTaskType() const;
+    int getTaskType() const;
     std::vector<int> getOperands() const;
     std::string getResult() const;
 

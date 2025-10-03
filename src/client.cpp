@@ -2,8 +2,12 @@
 #include <vector>
 #include <cstring>
 #include <limits>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <mqueue.h>
 #include "taskMessage.hpp"
 #include "operation.hpp"
+#include "ipcConfig.hpp"
 
 void showMenu(){ 
     std::cout << "For selecting a task enter the serial number:" << std::endl;
@@ -54,6 +58,11 @@ int main(){
     std::cout << "Task Dirtibutor" << std::endl;
     std::cout << "=====================" << std::endl;
 
+    mqd_t mq = mq_open(TASK_QUEUE, O_WRONLY);
+    if(mq == (mqd_t)-1){
+        perror("mq_open failed");
+        return -1;
+    }
     int choice = 0;
     while(1){
         showMenu();
@@ -74,7 +83,13 @@ int main(){
         for(int i = 0; i < msg.operandCount; i++)
             std::cout << "operands " << msg.operands[i] << std::endl;
         std::cout << "str " << msg.strOperand << std::endl;
+        size_t bytes_send = mq_send(mq, (char*)&msg, MAX_MSG_SIZE, 0);
+        if(bytes_send == -1){
+            perror("mq_sned failed");
+            continue;
+        }
     }
-
+    mq_close(mq);
+    mq_unlink(TASK_QUEUE);
     return 0;
 }

@@ -1,16 +1,22 @@
 #include "task.hpp"
+#include "taskMessage.hpp"
+#include "operation.hpp"
 
 //Declarations
 //Construtor
-Task::Task(int Id, const std::string type) : taskId(Id), taskType(type){}
+Task::Task(const struct TaskMessage &msg, int id) {
+    taskId = id;
+    taskType = msg.operation;
+    //numeric operation
+    if(msg.operandType == 0){
+        operands.assign(msg.operands, msg.operands + msg.operandCount);
+    }else if(msg.operandType == 1){
+        stringData = std::string(msg.strOperand);
+        result = "";
+    }
+}
 
-//Setters
-void Task::setOperands(const std::vector<int> &operands){
-    this->operands = operands;
-}
-void Task::setStringData(const std::string stringData){
-    this->stringData = stringData;
-}
+//Setter
 void Task::setResult(const std::string result){
     this->result = result;
 }
@@ -22,7 +28,7 @@ std::vector<int> Task::getOperands() const {
 int Task::getTaskId() const {
     return taskId;
 }
-std::string Task::getTaskType() const {
+int Task::getTaskType() const {
     return taskType;
 }
 std::string Task::getResult() const {
