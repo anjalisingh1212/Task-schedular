@@ -25,6 +25,9 @@ void Task::setResult(const std::string result){
 std::vector<int> Task::getOperands() const {
     return operands;
 }
+std::string Task::getStringData() const {
+    return stringData;
+}
 int Task::getTaskId() const {
     return taskId;
 }

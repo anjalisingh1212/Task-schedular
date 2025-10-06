@@ -25,10 +25,8 @@ public:
     int getTaskId() const;
     int getTaskType() const;
     std::vector<int> getOperands() const;
+    std::string getStringData() const;
     std::string getResult() const;
-
-    //print information
-    void print();
 
 };
 
