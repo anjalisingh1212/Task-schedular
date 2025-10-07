@@ -6,6 +6,8 @@
 //Construtor
 Task::Task(const struct TaskMessage &msg, int id) {
     taskId = id;
+    clientId = msg.clientId;
+    mqName = std::string(msg.resultMqName);
     taskType = msg.operation;
     //numeric operation
     if(msg.operandType == 0){
@@ -31,9 +33,15 @@ std::string Task::getStringData() const {
 int Task::getTaskId() const {
     return taskId;
 }
+int Task::getClientId() const {
+    return clientId;
+}
 int Task::getTaskType() const {
     return taskType;
 }
 std::string Task::getResult() const {
     return result;
+}
+std::string Task::getMqName() const {
+    return mqName;
 }

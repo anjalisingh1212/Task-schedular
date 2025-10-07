@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <mqueue.h>
+#include <unistd.h>
 #include "taskMessage.hpp"
 #include "operation.hpp"
 #include "ipcConfig.hpp"
@@ -20,8 +21,13 @@ void showMenu(){
     std::cout << "Enter: ";
 }
 
-TaskMessage createTask(int choice){
+TaskMessage createTask(int choice, int taskId, std::string MqName){
     TaskMessage msg = {};
+    msg.taskId = taskId;
+    pid_t cl_pid = getpid();
+    msg.clientId = cl_pid;
+    size_t len = MqName.copy(msg.resultMqName, MAX_MQ_NAME_LEN-1);
+    msg.resultMqName[len-1] = '\0';
     msg.operation = choice;
     if(choice == ADD || choice == SUBTRACT || choice == MULTIPLY || choice == SORT_NUMBERS){
         int size;
@@ -47,7 +53,7 @@ TaskMessage createTask(int choice){
         std::cout << "Enter a string: ";
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
         std::getline(std::cin, str); 
-        size_t len = str.copy(msg.strOperand, 255);
+        len = str.copy(msg.strOperand, STR_LEN-1);
         msg.strOperand[len] = '\0';
         msg.operandType = 1;
     }
@@ -58,11 +64,28 @@ int main(){
     std::cout << "Task Dirtibutor" << std::endl;
     std::cout << "=====================" << std::endl;
 
+    int taskId = 1;
     mqd_t mq = mq_open(TASK_QUEUE, O_WRONLY);
     if(mq == (mqd_t)-1){
         perror("mq_open failed");
         return -1;
     }
+
+    char MqName[MAX_MQ_NAME_LEN];
+    std::string nameStr = "/result_mq_" + std::to_string(getpid());
+    strncpy(MqName, nameStr.c_str(), MAX_MQ_NAME_LEN);
+
+// Ensure null termination
+MqName[MAX_MQ_NAME_LEN - 1] = '\0';
+
+    struct mq_attr attr;
+    attr.mq_flags = 0;
+    attr.mq_msgsize = MAX_TASK_MSG_SIZE;
+    attr.mq_maxmsg = TASK_QUEUE_SIZE;
+    attr.mq_curmsgs = 0;
+    
+    mqd_t resMq = mq_open(MqName, O_CREAT | O_RDONLY, 0644, &attr);
+
     int choice = 0;
     while(1){
         showMenu();
@@ -76,14 +99,14 @@ int main(){
             continue;
         }
 
-        TaskMessage msg = createTask(choice);
+        TaskMessage msg = createTask(choice, taskId, MqName);
         std::cout << "msg struct created: " << std::endl;
         std::cout << "operandtype " << msg.operandType << std::endl;
         std::cout << "operation " << msg.operation << std::endl;
         for(int i = 0; i < msg.operandCount; i++)
             std::cout << "operands " << msg.operands[i] << std::endl;
         std::cout << "str " << msg.strOperand << std::endl;
-        size_t bytes_send = mq_send(mq, (char*)&msg, MAX_MSG_SIZE, 0);
+        size_t bytes_send = mq_send(mq, (char*)&msg, MAX_TASK_MSG_SIZE, 0);
         if(bytes_send == -1){
             perror("mq_sned failed");
             continue;

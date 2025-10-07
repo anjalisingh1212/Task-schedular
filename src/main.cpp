@@ -2,6 +2,7 @@
 #include <mqueue.h>
 #include <csignal>
 #include <cstring>
+#include <memory>
 #include "scheduler.hpp"
 #include "taskMessage.hpp"
 #include "ipcConfig.hpp"
@@ -29,7 +30,7 @@ int main(){
     struct mq_attr attr;
     attr.mq_flags = 0;
     attr.mq_maxmsg = TASK_QUEUE_SIZE;
-    attr.mq_msgsize = MAX_MSG_SIZE;
+    attr.mq_msgsize = MAX_TASK_MSG_SIZE;
     attr.mq_curmsgs = 0;
     
     mqd_t mq = mq_open(TASK_QUEUE, O_CREAT | O_RDWR, 0644, &attr);
@@ -44,7 +45,7 @@ int main(){
     while(keepRunning){
         TaskMessage msg;
 
-        size_t bytes_rec = mq_receive(mq, (char*)&msg, MAX_MSG_SIZE, nullptr);
+        size_t bytes_rec = mq_receive(mq, (char*)&msg, MAX_TASK_MSG_SIZE, nullptr);
 
         std::cout << "msg struct created: " << std::endl;
         std::cout << "operandtype " << msg.operandType << std::endl;
@@ -54,8 +55,8 @@ int main(){
         std::cout << "str " << msg.strOperand << std::endl;
 
         if(bytes_rec >= 0){
-            Task task(msg, nextTaskId);
-            scheduler.enqueueTask(task);
+            auto taskPtr = std::make_shared<Task>(msg, nextTaskId++);
+            scheduler.enqueueTask(taskPtr);
         }else{
             if (errno == EINTR && !keepRunning) break;
             std::this_thread::sleep_for(std::chrono::milliseconds(200));

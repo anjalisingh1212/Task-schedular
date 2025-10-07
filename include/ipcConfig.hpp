@@ -7,7 +7,7 @@
 // Max message
 #define TASK_QUEUE_SIZE 10
 
-// Max message size
-#define MAX_MSG_SIZE sizeof(TaskMessage)
+// Max task message size
+#define MAX_TASK_MSG_SIZE sizeof(TaskMessage)
 
 #endif

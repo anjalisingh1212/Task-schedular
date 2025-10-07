@@ -12,9 +12,12 @@
 
 class Scheduler{
 private:
-    std::queue<Task> taskQueue;
+    std::queue <std::shared_ptr<Task>> taskQueue;
+    std::queue <std::shared_ptr<Task>> taskResultQueue;
     std::mutex queueMutex;
+    std::mutex resultMutex;
     std::condition_variable cv;
+    std::condition_variable resultCv;
     std::vector<std::thread> workers;
     std::atomic<bool> running;
 
@@ -22,8 +25,9 @@ private:
 public:
     Scheduler(int numThreads);
     ~Scheduler();
-    void enqueueTask(const Task &task);
+    void enqueueTask(std::shared_ptr<Task> );
     void workerThread();
+    void resultDispatcher();
     void stop();
 };
 
