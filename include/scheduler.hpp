@@ -6,7 +6,6 @@
 #include <thread>
 #include <condition_variable>
 #include <vector>
-#include <iostream>
 #include <atomic>
 #include "task.hpp"
 
@@ -19,6 +18,7 @@ private:
     std::condition_variable cv;
     std::condition_variable resultCv;
     std::vector<std::thread> workers;
+    std::thread dispatcherThread;
     std::atomic<bool> running;
 
 

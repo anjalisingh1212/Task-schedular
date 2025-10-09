@@ -1,7 +1,6 @@
 #include <iostream>
 #include <mqueue.h>
 #include <csignal>
-#include <cstring>
 #include <memory>
 #include "scheduler.hpp"
 #include "taskMessage.hpp"

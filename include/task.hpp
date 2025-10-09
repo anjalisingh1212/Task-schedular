@@ -4,9 +4,6 @@
 #include <vector>
 #include <string>
 
-// Max result message size
-#define MAX_RESULT_MSG_SIZE 512
-
 class Task{
 private:
     int taskId;

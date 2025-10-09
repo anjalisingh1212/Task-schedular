@@ -10,4 +10,7 @@
 // Max task message size
 #define MAX_TASK_MSG_SIZE sizeof(TaskMessage)
 
+// Max result message size
+#define MAX_RESULT_MSG_SIZE 512
+
 #endif
