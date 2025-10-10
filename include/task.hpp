@@ -16,7 +16,7 @@ private:
 public:
 
     Task()=default;
-    Task(const struct TaskMessage &msg, int id);
+    Task(const struct TaskMessage &msg);
     //setters
     void setOperands(const std::vector<int> &);
     void setStringData(const std::string);

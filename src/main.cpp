@@ -24,8 +24,6 @@ int main(){
     sa.sa_flags = 0; // Disables automatic restart of syscalls
     sigaction(SIGINT, &sa, nullptr);
 
-    int nextTaskId = 1;
-
     struct mq_attr attr;
     attr.mq_flags = 0;
     attr.mq_maxmsg = TASK_QUEUE_SIZE;
@@ -46,19 +44,11 @@ int main(){
 
         size_t bytes_rec = mq_receive(mq, (char*)&msg, MAX_TASK_MSG_SIZE, nullptr);
 
-        std::cout << "msg struct created: " << std::endl;
-        std::cout << "operandtype " << msg.operandType << std::endl;
-        std::cout << "operation " << msg.operation << std::endl;
-        for(int i = 0; i < msg.operandCount; i++)
-            std::cout << "operands " << msg.operands[i] << std::endl;
-        std::cout << "str " << msg.strOperand << std::endl;
-
         if(bytes_rec >= 0){
-            auto taskPtr = std::make_shared<Task>(msg, nextTaskId++);
+            auto taskPtr = std::make_shared<Task>(msg);
             scheduler.enqueueTask(taskPtr);
         }else{
             if (errno == EINTR && !keepRunning) break;
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
         }
     }
 

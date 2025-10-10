@@ -4,8 +4,8 @@
 
 //Declarations
 //Construtor
-Task::Task(const struct TaskMessage &msg, int id) {
-    taskId = id;
+Task::Task(const struct TaskMessage &msg) {
+    taskId = msg.taskId;
     clientId = msg.clientId;
     mqName = std::string(msg.resultMqName);
     taskType = msg.operation;

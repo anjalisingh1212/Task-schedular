@@ -17,7 +17,7 @@ Scheduler::~Scheduler(){
 }
 
 void Scheduler::enqueueTask(std::shared_ptr<Task> task){
-    std::cout << "Task is added in queue. Id : " << task->getTaskId() << std::endl;
+    std::cout << "Task is added in queue. Task Id: " << task->getTaskId() << std::endl;
     {
         std::lock_guard<std::mutex> lock(queueMutex);
         taskQueue.push(task);
@@ -37,7 +37,7 @@ void Scheduler::workerThread(){
         taskQueue.pop();
         lock.unlock();
 
-        std::cout << "Worker assigned task. Task Id : " << task->getTaskId() << std::endl;
+        std::cout << "Worker assigned task. Task Id: " << task->getTaskId() << std::endl;
         
         // Simulate task execution
         std::string result;
@@ -86,7 +86,7 @@ void Scheduler::workerThread(){
         // Save result inside task object
         task->setResult(result);
 
-        std::cout << "Result of task Id : " << task->getTaskId() << " " << task->getResult() << std::endl;
+        std::cout << "Result of task Id: " << task->getTaskId() << " , " << task->getResult() << std::endl;
         // Push completed task into result queue
         {
             std::lock_guard<std::mutex> resLock(resultMutex); //consturctor call for lock_guard
@@ -109,7 +109,7 @@ void Scheduler::resultDispatcher(){
         taskResultQueue.pop();
         lock.unlock();
 
-        std::cout  << "client Id: " << task->getClientId() << "Task Id: " << task->getTaskId() << " result dispatching : " << task->getResult() << std::endl; 
+        std::cout << "Result dispatching to "  << "client Id: " << task->getClientId() << " Task Id: " << task->getTaskId() << ". " << task->getResult() << std::endl; 
         char resultMsg[MAX_RESULT_MSG_SIZE];
         snprintf(resultMsg, MAX_RESULT_MSG_SIZE, 
                 "Task %d Result %s\n",

@@ -25,7 +25,7 @@ private:
 public:
     Scheduler(int numThreads);
     ~Scheduler();
-    void enqueueTask(std::shared_ptr<Task> );
+    void enqueueTask(std::shared_ptr<Task>);
     void workerThread();
     void resultDispatcher();
     void stop();

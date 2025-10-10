@@ -97,7 +97,6 @@ void recieveResult(std::string MqName){
 
     while(keepRunning){
         memset(result, 0, sizeof(result));
-        std::cout << "Waiting for results..." << std::endl;
         size_t bytesRec = mq_receive(resMq, result, MAX_RESULT_MSG_SIZE, 0);
         if (bytesRec < 0){
             if(errno == EINTR && !keepRunning) {   
@@ -157,13 +156,13 @@ int main(){
             continue;
         }
 
-        TaskMessage msg = createTask(choice, taskId, MqName);
-        std::cout << "msg struct created: " << std::endl;
-        std::cout << "operandtype " << msg.operandType << std::endl;
-        std::cout << "operation " << msg.operation << std::endl;
-        for(int i = 0; i < msg.operandCount; i++)
-            std::cout << "operands " << msg.operands[i] << std::endl;
-        std::cout << "str " << msg.strOperand << std::endl;
+        TaskMessage msg = createTask(choice, taskId++, MqName);
+        // std::cout << "msg struct created: " << std::endl;
+        // std::cout << "operandtype " << msg.operandType << std::endl;
+        // std::cout << "operation " << msg.operation << std::endl;
+        // for(int i = 0; i < msg.operandCount; i++)
+        //     std::cout << "operands " << msg.operands[i] << std::endl;
+        // std::cout << "str " << msg.strOperand << std::endl;
         size_t bytes_send = mq_send(taskMq, (char*)&msg, MAX_TASK_MSG_SIZE, 0);
         if(bytes_send == -1){
             perror("[Client] Mq send failed");
