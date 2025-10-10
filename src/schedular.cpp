@@ -6,10 +6,10 @@
 #include "ipcConfig.hpp"
 
 Scheduler::Scheduler(int numThreads) : running(true){
+    dispatcherThread = std::thread(&Scheduler::resultDispatcher, this);
     for(int i = 0; i < numThreads; i++){
         workers.emplace_back(&Scheduler::workerThread, this);
     }
-    dispatcherThread = std::thread(&Scheduler::dispatcherThread, this);
 }
 
 Scheduler::~Scheduler(){
