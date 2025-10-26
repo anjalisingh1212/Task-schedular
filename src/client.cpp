@@ -13,11 +13,15 @@
 #include "operation.hpp"
 #include "ipcConfig.hpp"
 
+// Global flag used to control program termination (shared across threads)
 std::atomic_bool keepRunning(true);
 
+// Signal handler for Ctrl+C to stop client gracefully
 void handle_sigint(int){
     keepRunning = false;
 }
+
+// Display the available operations to the user
 void showMenu(){ 
     std::cout << "For selecting a task enter the serial number:" << std::endl;
     std::cout << "1. Addition" << std::endl;
@@ -29,17 +33,27 @@ void showMenu(){
     std::cout << "Enter: ";
 }
 
+/*
+ * createTask()
+ * -------------
+ * Builds a TaskMessage structure based on user's selected operation.
+ * The message is later sent to the scheduler via the task message queue.
+ */
 TaskMessage createTask(int choice, int taskId, std::string MqName){
     TaskMessage msg = {};
     msg.taskId = taskId;
-    msg.clientId = getpid();
+    msg.clientId = getpid(); // Use process ID as unique client identifier
+
+    // Copy client’s result queue name into message (for scheduler to respond)
     strncpy(msg.resultMqName, MqName.c_str(), MAX_MQ_NAME_LEN - 1);
     msg.resultMqName[MAX_MQ_NAME_LEN - 1] = '\0';
     msg.operation = choice;
-    if(choice == ADD || choice == SUBTRACT || choice == MULTIPLY || choice == SORT_NUMBERS){
 
+    // For numeric operations: ADD, SUBTRACT, MULTIPLY, SORT
+    if(choice == ADD || choice == SUBTRACT || choice == MULTIPLY || choice == SORT_NUMBERS){
         int size;
 
+        // Validate operand count
         while(1){
         std::cout << "Enter number of operands(max 20 operands): ";
         std::cin >> size;
@@ -56,33 +70,44 @@ TaskMessage createTask(int choice, int taskId, std::string MqName){
             std::cin >> ops[i];
         }
 
-        msg.operandType = 0;
+        msg.operandType = 0; // Numeric type
 
         for(int i = 0; i < size; i++)   msg.operands[i] = ops[i];
         msg.operandCount = size;
 
-    }else if(choice == REVERSE_STRING){
+    }else if(choice == REVERSE_STRING){ // For string operation
         std::string str;
         std::cout << "Enter a string: ";
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
-        std::getline(std::cin, str); 
+        std::getline(std::cin, str);
+        
+        // Copy string to message buffer safely
         size_t len = str.copy(msg.strOperand, STR_LEN-1);
         msg.strOperand[len] = '\0';
-        msg.operandType = 1;
+        msg.operandType = 1; // String type
     }
 
     return msg;
 }
 
+/*
+ * recieveResult()
+ * ----------------
+ * This function runs in a separate thread.
+ * It continuously listens for results from the scheduler via a message queue.
+ */
 void recieveResult(std::string MqName){
 
     std::cout << "Receiver thread is started" << std::endl;
 
+    // Define message queue attributes
     struct mq_attr attr;
     attr.mq_flags = 0;
     attr.mq_msgsize = MAX_RESULT_MSG_SIZE;
     attr.mq_maxmsg = TASK_QUEUE_SIZE;
     attr.mq_curmsgs = 0;
+
+    // Create and open client’s result message queue
     char resMqName[MAX_MQ_NAME_LEN];
     strncpy(resMqName, MqName.c_str(), MAX_MQ_NAME_LEN - 1);
     resMqName[MAX_MQ_NAME_LEN - 1] = '\0';
@@ -95,19 +120,23 @@ void recieveResult(std::string MqName){
 
     char result[MAX_RESULT_MSG_SIZE] = "\0";
 
+    // Continuously listen for results until interrupted
     while(keepRunning){
         memset(result, 0, sizeof(result));
         size_t bytesRec = mq_receive(resMq, result, MAX_RESULT_MSG_SIZE, 0);
         if (bytesRec < 0){
-            if(errno == EINTR && !keepRunning) {   
+            if(errno == EINTR && !keepRunning) {    // Interrupted by signal
                 break;
             }
-            else if(errno != EAGAIN){ 
+            else if(errno != EAGAIN){  // Other errors
             perror("[Client] mq_receive failed");
             break;
             }
         }
+
+        // Handle received message
         if(bytesRec >= 0){
+            // Exit signal from main thread
             if(strncmp(result, "EXIT", strlen("EXIT")) == 0)
                 break;
             std::cout << "\nResult recived for " <<  result << std::endl;
@@ -115,12 +144,22 @@ void recieveResult(std::string MqName){
 
     }
 
+    // Cleanup message queue before exiting
     mq_close(resMq);
     mq_unlink(resMqName);
     std::cout << "[Client] Receiver thread exiting...\n";
 
 }
 
+/*
+ * main()
+ * -------
+ * Entry point for the client program.
+ * - Connects to the scheduler’s task queue
+ * - Creates a private result queue for receiving results
+ * - Starts receiver thread
+ * - Allows user to continuously submit tasks until exit
+ */
 int main(){
 
     std::cout << "=====================" << std::endl;
@@ -128,21 +167,30 @@ int main(){
     std::cout << "=====================" << std::endl;
 
     int taskId = 1;
+
+    // Connect to the scheduler's task message queue
     mqd_t taskMq = mq_open(TASK_QUEUE, O_WRONLY);
     if(taskMq == (mqd_t)-1){
         perror("mq_open failed");
         return -1;
     }
 
+     // Create a unique message queue name for this client (based on PID)
     std::string MqName = "/result_mq_" + std::to_string(getpid());
     
+    // Start a separate thread to listen for results
     std::thread recieverThread(&recieveResult, MqName);
+
     int choice = 0;
     while(1){
         showMenu();
         std::cin >> choice;
+
+        // Exit option
         if(choice == 0){
             keepRunning = false; // Signals receiver thread to exit
+
+            // Send EXIT message to result queue to unblock mq_receive
             char tempMqName[MAX_MQ_NAME_LEN];
             strncpy(tempMqName, MqName.c_str(), MAX_MQ_NAME_LEN);
             mqd_t tempMq = mq_open(tempMqName, O_WRONLY);
@@ -151,18 +199,15 @@ int main(){
             mq_close(tempMq);
             break;
         }
+
+        // Invalid option
         if(choice > 5){
             std::cout << "No matching option..." << std::endl;
             continue;
         }
 
+        // Create task message and send it to scheduler
         TaskMessage msg = createTask(choice, taskId++, MqName);
-        // std::cout << "msg struct created: " << std::endl;
-        // std::cout << "operandtype " << msg.operandType << std::endl;
-        // std::cout << "operation " << msg.operation << std::endl;
-        // for(int i = 0; i < msg.operandCount; i++)
-        //     std::cout << "operands " << msg.operands[i] << std::endl;
-        // std::cout << "str " << msg.strOperand << std::endl;
         size_t bytes_send = mq_send(taskMq, (char*)&msg, MAX_TASK_MSG_SIZE, 0);
         if(bytes_send == -1){
             perror("[Client] Mq send failed");
@@ -170,6 +215,7 @@ int main(){
         }
     }
 
+    // Clean up and close resources
     mq_close(taskMq);
     if(recieverThread.joinable())
         recieverThread.join();

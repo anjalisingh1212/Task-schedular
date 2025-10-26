@@ -1,4 +1,4 @@
-# Task Distributor – Multithreaded Scheduler using C++ Threads and POSIX Message Queues
+# Task Scheduling System – Multithreaded Scheduler using C++ Threads and POSIX Message Queues
 
 ## Overview
 

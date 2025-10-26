@@ -1,16 +1,24 @@
 #ifndef IPC_CONFIG_HPP
 #define IPC_CONFIG_HPP
 
-// POSIX message queue name
+/**
+ * @brief Global IPC configuration constants.
+ * 
+ * This header defines configuration parameters for
+ * the POSIX message queue–based interprocess communication
+ * between the client and the scheduler/server.
+ */
+
+// Name of the main task queue used for client → scheduler communication
 #define TASK_QUEUE "/task_queue"
 
-// Max message
+// Maximum number of messages allowed in the task queue
 #define TASK_QUEUE_SIZE 10
 
-// Max task message size
+// Maximum size (in bytes) of each task message
 #define MAX_TASK_MSG_SIZE sizeof(TaskMessage)
 
-// Max result message size
+// Maximum size (in bytes) for result messages sent back to clients
 #define MAX_RESULT_MSG_SIZE 512
 
-#endif
+#endif // IPC_CONFIG_HPP

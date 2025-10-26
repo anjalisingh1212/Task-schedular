@@ -9,6 +9,6 @@ include_directories(include)
 find_package(Threads REQUIRED)
 
 add_executable(client src/client.cpp)
-add_executable(scheduler src/main.cpp src/schedular.cpp src/task.cpp)
+add_executable(scheduler src/main.cpp src/scheduler.cpp src/task.cpp)
 target_link_libraries(scheduler PRIVATE Threads::Threads rt) #link POSIX threads + message queue
 target_link_libraries(client PRIVATE rt) #link message queue
